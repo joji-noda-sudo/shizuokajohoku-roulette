@@ -54,6 +54,18 @@ button:disabled{opacity:.5}
 </div>
 
 <script>
+
+// ==============================
+// 🎯 当選確率設定
+// ==============================
+const weights = [
+  50,  // 300円OFF
+  30,  // 500円OFF
+  15,  // 1,000円OFF
+  4,   // 1,500円OFF
+  1    // 2,000円OFF
+];
+  
 const items = [
   {name:"500円OFF", code:"JY-500", detail:"お会計から500円OFF"},
   {name:"1,000円OFF", code:"JY-1000", detail:"お会計から1,000円OFF"},
