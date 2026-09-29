@@ -54,17 +54,6 @@ button:disabled{opacity:.5}
 </div>
 
 <script>
-
-// ==============================
-// 🎯 当選確率設定
-// ==============================
-const weights = [
-  1,  // 300円OFF
-  1,  // 500円OFF
-  1,  // 1,000円OFF
-  1,   // 1,500円OFF
-  96    // 2,000円OFF
-];
   
 const items = [
   {name:"500円OFF", code:"JY-500", detail:"お会計から500円OFF"},
@@ -117,7 +106,19 @@ document.getElementById("spin").addEventListener("click",()=>{
   localStorage.setItem(USED_KEY,"1");
   spinning=true;
   document.getElementById("spin").disabled=true;
-  const index=Math.floor(Math.random()*n);
+  const weights = [30, 15, 4, 1, 50, 15, 30, 1];
+
+const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+let random = Math.random() * totalWeight;
+let index = 0;
+
+for (let i = 0; i < weights.length; i++) {
+  random -= weights[i];
+  if (random < 0) {
+    index = i;
+    break;
+  }
+}
   const segment=360/n;
   const target=360*6 + (360-(index+0.5)*segment);
   rotation += target;
