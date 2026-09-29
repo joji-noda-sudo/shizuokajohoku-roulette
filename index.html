@@ -21,6 +21,9 @@ button:disabled{opacity:.5}
 .result p{margin:7px 0;color:#555}
 .code{display:inline-block;background:#f1f1f1;border:1px dashed #999;border-radius:8px;padding:10px 18px;margin:10px 0;font-size:20px;font-weight:700;letter-spacing:1px}
 .note{font-size:12px;color:#777;line-height:1.7;margin-top:16px}
+.used{display:none;background:#fff;border-radius:16px;padding:28px 20px;margin-top:20px;box-shadow:0 4px 14px #0001}
+.used h2{margin:0 0 12px;font-size:22px}
+.used p{margin:0;color:#555;line-height:1.8}
 </style>
 </head>
 <body>
@@ -42,6 +45,11 @@ button:disabled{opacity:.5}
     <div class="code" id="coupon"></div>
     <p id="detail"></p>
     <div class="note">※ご利用条件・有効期限は店舗の設定に合わせて変更してください。<br>※この画面はサンプルです。</div>
+  </div>
+
+  <div class="used" id="used">
+    <h2>このクーポンは利用済みです</h2>
+    <p>この端末では、ルーレットをもう一度回すことはできません。</p>
   </div>
 </div>
 
@@ -78,9 +86,23 @@ function draw(){
 }
 draw();
 
+const USED_KEY="shizuoka_johoku_roulette_used_v1";
 let rotation=0, spinning=false;
+
+// すでに利用済みなら、ルーレットを表示せず利用済み画面にします。
+if(localStorage.getItem(USED_KEY)==="1"){
+  document.getElementById("wheel").style.display="none";
+  document.querySelector(".pointer").style.display="none";
+  document.querySelector(".center").style.display="none";
+  document.getElementById("spin").style.display="none";
+  document.getElementById("used").style.display="block";
+}
+
 document.getElementById("spin").addEventListener("click",()=>{
-  if(spinning)return;
+  if(spinning || localStorage.getItem(USED_KEY)==="1")return;
+
+  // 回し始めた時点で利用済みにします。途中でページを閉じても再抽選できません。
+  localStorage.setItem(USED_KEY,"1");
   spinning=true;
   document.getElementById("spin").disabled=true;
   const index=Math.floor(Math.random()*n);
@@ -95,7 +117,6 @@ document.getElementById("spin").addEventListener("click",()=>{
     document.getElementById("detail").textContent=items[index].detail;
     document.getElementById("result").style.display="block";
     spinning=false;
-    document.getElementById("spin").disabled=false;
   },4600);
 });
 </script>
