@@ -106,7 +106,7 @@ document.getElementById("spin").addEventListener("click",()=>{
   localStorage.setItem(USED_KEY,"1");
   spinning=true;
   document.getElementById("spin").disabled=true;
-  const weights = [30, 15, 4, 1, 50, 15, 30, 1];
+  const weights = [0, 0, 0, 0, 0, 0, 0, 100];
 
 const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
 let random = Math.random() * totalWeight;
