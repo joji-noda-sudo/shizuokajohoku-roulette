@@ -34,7 +34,6 @@ h1{
   line-height:1.5;
   margin:8px 0 6px;
   color:#e85b45;
-  text-shadow:1px 2px 0 #fff;
 }
 
 .sub{
@@ -95,20 +94,14 @@ h1{
 button{
   border:0;
   border-radius:999px;
-  padding:16px 48px;
+  padding:16px 35px;
   font-family:inherit;
-  font-size:19px;
+  font-size:18px;
   font-weight:900;
   background:#ff704f;
   color:#fff;
   cursor:pointer;
   box-shadow:0 5px 0 #d94d35;
-  transition:transform .15s,box-shadow .15s;
-}
-
-button:active{
-  transform:translateY(4px);
-  box-shadow:0 1px 0 #d94d35;
 }
 
 button:disabled{
@@ -152,6 +145,14 @@ button:disabled{
   color:#e85b45;
 }
 
+.use-button{
+  display:block;
+  width:100%;
+  margin:18px auto 5px;
+  background:#e85b45;
+  box-shadow:0 5px 0 #bd4030;
+}
+
 .note{
   font-size:12px;
   font-weight:700;
@@ -163,7 +164,7 @@ button:disabled{
 .used{
   display:none;
   background:#fff;
-  border:3px solid #ffcf9c;
+  border:3px solid #9ac9a2;
   border-radius:20px;
   padding:28px 20px;
   margin-top:20px;
@@ -172,9 +173,16 @@ button:disabled{
 
 .used h2{
   margin:0 0 12px;
-  font-size:22px;
+  font-size:25px;
   font-weight:900;
-  color:#e85b45;
+  color:#43965a;
+}
+
+.used .used-price{
+  font-size:29px;
+  font-weight:900;
+  color:#43965a;
+  margin:10px 0;
 }
 
 .used p{
@@ -206,18 +214,25 @@ button:disabled{
   <div class="result" id="result">
     <h2 id="resultTitle"></h2>
     <p>おめでとうございます！</p>
+
     <div class="code" id="coupon"></div>
     <p id="detail"></p>
 
+    <button class="use-button" id="useCoupon">
+      クーポンを使用する
+    </button>
+
     <div class="note">
-      ※ご利用条件・有効期限は店舗の設定に合わせて変更してください。<br>
-      ※この画面をスクリーンショットで必ず保存して、会計の際にご提示ください。
+      ※11月中の作業が対象です。<br>
+      ※他の割引との併用はできません。<br>
+      ※クーポン使用時にスタッフへ画面をご提示ください。
     </div>
   </div>
 
   <div class="used" id="used">
-    <h2>このクーポンは利用済みです</h2>
-    <p>この端末では、ルーレットをもう一度回すことはできません。</p>
+    <h2>✓ 使用済み</h2>
+    <div class="used-price" id="usedPrice"></div>
+    <p>こちらのクーポンは使用済みです。<br>ご利用ありがとうございました！</p>
   </div>
 
 </div>
@@ -271,21 +286,18 @@ function draw(){
       cx+Math.cos(a)*255,
       cy+Math.sin(a)*255
     );
-
     ctx.rotate(a+Math.PI/2);
 
     ctx.fillStyle="#333";
     ctx.font='900 24px "M PLUS Rounded 1c", sans-serif';
     ctx.textAlign="center";
     ctx.textBaseline="middle";
-
     ctx.fillText(items[i].name,0,0);
 
     ctx.restore();
   }
 }
 
-// フォント読み込み後にルーレットを描画
 document.fonts.ready.then(draw);
 
 const HISTORY_KEY="shizuoka_johoku_roulette_history_v2";
@@ -300,8 +312,6 @@ function getWeightedIndex(){
     (sum,weight)=>sum+weight,0
   );
 
-  if(totalWeight<=0)return 0;
-
   let random=Math.random()*totalWeight;
 
   for(let i=0;i<weights.length;i++){
@@ -312,17 +322,10 @@ function getWeightedIndex(){
   return weights.length-1;
 }
 
-function showResult(index){
-  document.getElementById("resultTitle").textContent=items[index].name;
-  document.getElementById("coupon").textContent=items[index].code;
-  document.getElementById("detail").textContent=items[index].detail;
-  document.getElementById("result").style.display="block";
-}
-
-function getSavedResult(){
+// 保存データを取得
+function getSavedData(){
   try{
     const saved=localStorage.getItem(HISTORY_KEY);
-
     if(!saved)return null;
 
     const data=JSON.parse(saved);
@@ -333,42 +336,93 @@ function getSavedResult(){
       data.index>=0 &&
       data.index<n
     ){
-      return data.index;
+      return data;
     }
-
   }catch(e){}
 
   return null;
 }
 
-const savedIndex=getSavedResult();
+// 当選結果を表示
+function showResult(index){
+  document.getElementById("resultTitle").textContent=items[index].name;
+  document.getElementById("coupon").textContent=items[index].code;
+  document.getElementById("detail").textContent=items[index].detail;
 
-if(savedIndex!==null){
-  document.querySelector(".wheelbox").style.display="none";
-  document.getElementById("spin").style.display="none";
-  showResult(savedIndex);
+  document.getElementById("result").style.display="block";
 }
 
+// 使用済み画面を表示
+function showUsed(index){
+  document.getElementById("wheel").style.display="none";
+  document.querySelector(".wheelbox").style.display="none";
+  document.getElementById("spin").style.display="none";
+  document.getElementById("result").style.display="none";
+
+  document.getElementById("usedPrice").textContent=items[index].name;
+  document.getElementById("used").style.display="block";
+}
+
+// クーポン使用処理
+document.getElementById("useCoupon").addEventListener("click",()=>{
+
+  const data=getSavedData();
+
+  if(!data || data.used===true)return;
+
+  const confirmed=window.confirm(
+    "クーポンを使用済みにしますか？\n\n一度使用済みにすると元に戻せません。"
+  );
+
+  if(!confirmed)return;
+
+  data.used=true;
+  data.usedAt=Date.now();
+
+  localStorage.setItem(
+    HISTORY_KEY,
+    JSON.stringify(data)
+  );
+
+  showUsed(data.index);
+});
+
+// 前回の保存データを確認
+const savedData=getSavedData();
+
+if(savedData){
+
+  if(savedData.used===true){
+    showUsed(savedData.index);
+  }else{
+    document.querySelector(".wheelbox").style.display="none";
+    document.getElementById("spin").style.display="none";
+    showResult(savedData.index);
+  }
+
+}
+
+// ルーレットを回す
 document.getElementById("spin").addEventListener("click",()=>{
 
-  if(spinning || getSavedResult()!==null)return;
+  if(spinning || getSavedData()!==null)return;
 
   spinning=true;
-
   document.getElementById("spin").disabled=true;
 
   const index=getWeightedIndex();
 
+  // 当選結果を保存
   localStorage.setItem(
     HISTORY_KEY,
     JSON.stringify({
       index:index,
-      savedAt:Date.now()
+      savedAt:Date.now(),
+      used:false
     })
   );
 
   const segment=360/n;
-
   const target=360*8+(360-(index+0.5)*segment);
 
   rotation+=target;
